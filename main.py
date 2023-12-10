@@ -41,12 +41,30 @@ def cadastrar_pessoa():
         conn.close()
 
 def consultar_viagens():
+    print("Opções de Filtro:")
+    print("1. Sem filtro")
+    print("2. Filtrar por nome")
+    print("3. Filtrar por data")
+    opcao_filtro = input("Escolha uma opção de filtro: ")
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT Nome, TO_DATE(TO_CHAR(data_viagem, 'DD/MM/YYYY'), 'DD/MM/YYYY') as data_viagem FROM Viagem")
-        for nome,data_viagem in cursor:
-            print(f"Nome: {nome}, Data: {data_viagem}")
+        if opcao_filtro == '1':
+            cursor.execute("SELECT Nome,TO_DATE(TO_CHAR(data_viagem, 'DD/MM/YYYY'), 'DD/MM/YYYY') as data_viagem FROM Viagem")
+        elif opcao_filtro == '2':
+            nome = input("Digite o nome da viagem: ")
+            cursor.execute("SELECT Nome, TO_DATE(TO_CHAR(data_viagem, 'DD/MM/YYYY'), 'DD/MM/YYYY') as data_viagem FROM Viagem WHERE Nome LIKE :nome", nome=f'%{nome}%')
+        elif opcao_filtro == '3':
+            data_viagem = input("Digite a data da viagem (DD/MM/YYYY): ")
+            cursor.execute("SELECT Nome, TO_DATE(TO_CHAR(data_viagem, 'DD/MM/YYYY'), 'DD/MM/YYYY') as data_viagem FROM Viagem WHERE TO_CHAR(Data_Viagem, 'DD/MM/YYYY') = :data_viagem", data_viagem=data_viagem)
+        else:
+            print("Opção de filtro inválida. Exibindo todas as viagens.")
+            cursor.execute("SELECT Nome, TO_DATE(TO_CHAR(data_viagem, 'DD/MM/YYYY'), 'DD/MM/YYYY') as data_viagem FROM Viagem")
+
+        for nome, data in cursor:
+            print(f"Nome: {nome}, Data: {data.strftime('%d/%m/%Y')}")
+
     except oracledb.DatabaseError as e:
         print(f"Erro ao consultar viagens: {e}")
     finally:
